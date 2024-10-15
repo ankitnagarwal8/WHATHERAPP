@@ -1,19 +1,22 @@
 import requests
 import streamlit as st
 
-# Function to get location details based on IP
+# Function to get location details based on IP, limited to India
 def get_location():
     try:
         # IPInfo API to get location data
         response = requests.get('https://ipinfo.io')
         data = response.json()
 
-        # Split the location into latitude and longitude
-        loc = data['loc'].split(',')
-        latitude = loc[0]
-        longitude = loc[1]
-        city = data['city']
-        return latitude, longitude, city
+        # Check if the location is in India
+        if data['country'] == 'IN':
+            loc = data['loc'].split(',')
+            latitude = loc[0]
+            longitude = loc[1]
+            city = data['city']
+            return latitude, longitude, city
+        else:
+            return None, None, None  # If not India, return None
     except Exception as e:
         return None, None, None
 
@@ -108,9 +111,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    st.title("🌦️ Animated Weather Dashboard")
+    st.title("🌦️ India Weather Dashboard")
 
-    # Automatically get the user's location and city name
+    # Automatically get the user's location and city name, limited to India
     lat, lon, city = get_location()
 
     if lat and lon and city:
@@ -128,4 +131,4 @@ if __name__ == "__main__":
             st.markdown(f"<div class='humidity'>💧 Humidity: {weather_data['Humidity']}</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='pressure'>🔽 Pressure: {weather_data['Pressure']}</div>", unsafe_allow_html=True)
     else:
-        st.error("Unable to retrieve location data. Please try again.")
+        st.error("Unable to retrieve location data or you're not in India. Please try again.")
