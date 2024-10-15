@@ -1,7 +1,23 @@
 import requests
 import streamlit as st
-import time
 
+# Function to get location details based on IP
+def get_location():
+    try:
+        # IPInfo API to get location data
+        response = requests.get('https://ipinfo.io')
+        data = response.json()
+
+        # Split the location into latitude and longitude
+        loc = data['loc'].split(',')
+        latitude = loc[0]
+        longitude = loc[1]
+        city = data['city']
+        return latitude, longitude, city
+    except Exception as e:
+        return None, None, None
+
+# Function to get weather information based on latitude and longitude
 def get_weather(lat, lon):
     api_key = "a8515bde5d684070b32150756242709"  # Your WeatherAPI key
     base_url = "http://api.weatherapi.com/v1/current.json"  # WeatherAPI URL for current weather data
@@ -42,26 +58,74 @@ def get_weather(lat, lon):
     else:
         return {"Error": f"Unable to fetch data. Status code {response.status_code}"}
 
+# CSS for simple animations and colored text
+st.markdown("""
+    <style>
+        .city-name {
+            font-size: 32px;
+            font-weight: bold;
+            color: #FF5733; /* Reddish-orange for location */
+            animation: glow 1.5s infinite;
+        }
+
+        .temperature {
+            font-size: 28px;
+            font-weight: bold;
+            color: #33FF57; /* Green for temperature */
+        }
+
+        .weather-condition {
+            font-size: 26px;
+            font-weight: bold;
+            color: #3380FF; /* Blue for weather description */
+            animation: float 2s infinite ease-in-out;
+        }
+
+        .humidity {
+            font-size: 24px;
+            color: #FF33FF; /* Pinkish color for humidity */
+        }
+
+        .pressure {
+            font-size: 24px;
+            color: #FFAC33; /* Orange for pressure */
+        }
+
+        /* Animation for glowing effect on the city name */
+        @keyframes glow {
+            0% { text-shadow: 0 0 5px #FF5733, 0 0 10px #FF5733; }
+            50% { text-shadow: 0 0 20px #FF5733, 0 0 30px #FF5733; }
+            100% { text-shadow: 0 0 5px #FF5733, 0 0 10px #FF5733; }
+        }
+
+        /* Floating animation for weather description */
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 if __name__ == "__main__":
-    st.title("Weather Information")
+    st.title("🌦️ Animated Weather Dashboard")
 
-    # Latitude and Longitude Input from user
-    lat = st.text_input("Enter Latitude", "26.922070")  # Default is for Jaipur
-    lon = st.text_input("Enter Longitude", "75.778885")
+    # Automatically get the user's location and city name
+    lat, lon, city = get_location()
 
-    if st.button("Get Weather") or True:  # Always load weather on app start
-        while True:
-            weather_data = get_weather(lat, lon)
-
-            if "Error" in weather_data:
-                st.error(weather_data["Error"])
-            else:
-                # Display the weather data
-                st.write(f"**Temperature**: {weather_data['Temperature']}")
-                st.write(f"**Weather**: {weather_data['Weather']}")
-                st.write(f"**Humidity**: {weather_data['Humidity']}")
-                st.write(f"**Pressure**: {weather_data['Pressure']}")
-
-            # Refresh the data every 5 minutes (300 seconds)
-            time.sleep(300)
-            st.experimental_rerun()  # Rerun the script to refresh the data
+    if lat and lon and city:
+        st.markdown(f"<div class='city-name'>📍 {city}</div>", unsafe_allow_html=True)
+        
+        # Fetch the weather data
+        weather_data = get_weather(lat, lon)
+        
+        if "Error" in weather_data:
+            st.error(weather_data["Error"])
+        else:
+            # Display the weather data with different colors and simple animations
+            st.markdown(f"<div class='temperature'>🌡️ Temperature: {weather_data['Temperature']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='weather-condition'>☁️ Weather: {weather_data['Weather']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='humidity'>💧 Humidity: {weather_data['Humidity']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='pressure'>🔽 Pressure: {weather_data['Pressure']}</div>", unsafe_allow_html=True)
+    else:
+        st.error("Unable to retrieve location data. Please try again.")
