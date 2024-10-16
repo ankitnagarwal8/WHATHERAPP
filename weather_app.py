@@ -6,21 +6,29 @@ import pytz
 # Define the IST timezone
 ist = pytz.timezone('Asia/Kolkata')
 
-# Function to get location details based on IP, with a default fallback to New Delhi, India
+# Function to get location details using apiip.net API, with default fallback to New Delhi, India
 def get_location():
     try:
-        # IPInfo API to get location data
-        response = requests.get('https://ipinfo.io')
+        # API URL with access key and predefined IP address
+        api_key = "c0fc6f0e-7ca6-49ac-b588-347c2776a51a"
+        api_url = f"https://apiip.net/api/check?accessKey={api_key}"
+        
+        # Get the location data from the API
+        response = requests.get(api_url)
         data = response.json()
-
-        # Split the location into latitude and longitude
-        loc = data['loc'].split(',')
-        latitude = loc[0]
-        longitude = loc[1]
-        city = data['city']
-        return latitude, longitude, city
+        
+        if response.status_code == 200:
+            # Extract location details from API response
+            latitude = data.get('location', {}).get('latitude', '28.6139')  # Fallback to New Delhi if missing
+            longitude = data.get('location', {}).get('longitude', '77.2090')  # Fallback to New Delhi if missing
+            city = data.get('city', 'New Delhi')  # Fallback to New Delhi if city is not found
+            
+            return latitude, longitude, city
+        else:
+            # If API call fails, fallback to New Delhi
+            return "28.6139", "77.2090", "New Delhi"
     except Exception as e:
-        # Default to New Delhi, India if the location cannot be fetched
+        # Default to New Delhi, India if an error occurs
         return "28.6139", "77.2090", "New Delhi"
 
 # Function to get weather information based on latitude and longitude
