@@ -1,6 +1,9 @@
 import requests
 import streamlit as st
+import pytz
 
+# Define the IST timezone
+ist = pytz.timezone('Asia/Kolkata')
 # Function to get location details based on IP
 def get_location():
     try:
